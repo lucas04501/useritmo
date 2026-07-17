@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organizacao {
+  id        String    @id @default(cuid())
+  nome      String
+  criadoEm  DateTime  @default(now())
+  usuarios  Usuario[]
+  feriados  Feriado[]
+}
+
+model Usuario {
+  id             String   @id @default(cuid())
+  organizacaoId  String
+  organizacao    Organizacao @relation(fields: [organizacaoId], references: [id])
+  nome           String
+  email          String   @unique
+  senhaHash      String
+  papel          Papel    @default(MEMBRO)
+  tema           String   @default("dark")
+  idioma         String   @default("pt-BR")
+  formatoHora    String   @default("24h")
+  metaDiariaMin  Int      @default(480)
+  metaSemanalMin Int      @default(2400)
+  metaMensalMin  Int?
+  criadoEm       DateTime @default(now())
+
+  registros      RegistroPonto[]
+  bancoHoras     BancoHoras?
+
+  @@index([organizacaoId])
+}
+
+model RegistroPonto {
+  id                 String    @id @default(cuid())
+  usuarioId          String
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id])
+  data               DateTime  @db.Date
+  entrada            DateTime?
+  saida              DateTime?
+  status             StatusDia @default(EM_ANDAMENTO)
+  minutosTrabalhados Int       @default(0)
+  minutosPausados    Int       @default(0)
+  minutosExtras      Int       @default(0)
+  observacao         String?
+  criadoEm           DateTime  @default(now())
+  atualizadoEm       DateTime  @updatedAt
+
+  pausas             Pausa[]
+
+  @@unique([usuarioId, data])
+  @@index([usuarioId, data])
+}
+
+model Pausa {
+  id         String         @id @default(cuid())
+  registroId String
+  registro   RegistroPonto  @relation(fields: [registroId], references: [id])
+  inicio     DateTime
+  fim        DateTime?
+  motivo     String?
+
+  @@index([registroId])
+}
+
+model BancoHoras {
+  id             String   @id @default(cuid())
+  usuarioId      String   @unique
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  saldoMinutos   Int      @default(0)
+  atualizadoEm   DateTime @updatedAt
+}
+
+model Feriado {
+  id             String      @id @default(cuid())
+  organizacaoId  String
+  organizacao    Organizacao @relation(fields: [organizacaoId], references: [id])
+  data           DateTime    @db.Date
+  nome           String
+
+  @@index([organizacaoId, data])
+}
+
+enum Papel {
+  ADMIN
+  MEMBRO
+}
+
+enum StatusDia {
+  COMPLETO
+  INCOMPLETO
+  AUSENTE
+  FERIADO
+  EM_ANDAMENTO
+}
