@@ -8,31 +8,30 @@ datasource db {
 }
 
 model Organizacao {
-  id        String    @id @default(cuid())
-  nome      String
-  criadoEm  DateTime  @default(now())
-  usuarios  Usuario[]
-  feriados  Feriado[]
+  id       String    @id @default(cuid())
+  nome     String
+  criadoEm DateTime  @default(now())
+  feriados Feriado[]
+  usuarios Usuario[]
 }
 
 model Usuario {
-  id             String   @id @default(cuid())
+  id             String          @id @default(cuid())
   organizacaoId  String
-  organizacao    Organizacao @relation(fields: [organizacaoId], references: [id])
   nome           String
-  email          String   @unique
+  email          String          @unique
   senhaHash      String
-  papel          Papel    @default(MEMBRO)
-  tema           String   @default("dark")
-  idioma         String   @default("pt-BR")
-  formatoHora    String   @default("24h")
-  metaDiariaMin  Int      @default(480)
-  metaSemanalMin Int      @default(2400)
+  papel          Papel           @default(MEMBRO)
+  tema           String          @default("dark")
+  idioma         String          @default("pt-BR")
+  formatoHora    String          @default("24h")
+  metaDiariaMin  Int             @default(480)
+  metaSemanalMin Int             @default(2400)
   metaMensalMin  Int?
-  criadoEm       DateTime @default(now())
-
-  registros      RegistroPonto[]
+  criadoEm       DateTime        @default(now())
   bancoHoras     BancoHoras?
+  registros      RegistroPonto[]
+  organizacao    Organizacao     @relation(fields: [organizacaoId], references: [id])
 
   @@index([organizacaoId])
 }
@@ -40,7 +39,6 @@ model Usuario {
 model RegistroPonto {
   id                 String    @id @default(cuid())
   usuarioId          String
-  usuario            Usuario   @relation(fields: [usuarioId], references: [id])
   data               DateTime  @db.Date
   entrada            DateTime?
   saida              DateTime?
@@ -51,38 +49,38 @@ model RegistroPonto {
   observacao         String?
   criadoEm           DateTime  @default(now())
   atualizadoEm       DateTime  @updatedAt
-
   pausas             Pausa[]
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id])
 
   @@unique([usuarioId, data])
   @@index([usuarioId, data])
 }
 
 model Pausa {
-  id         String         @id @default(cuid())
+  id         String        @id @default(cuid())
   registroId String
-  registro   RegistroPonto  @relation(fields: [registroId], references: [id])
   inicio     DateTime
   fim        DateTime?
   motivo     String?
+  registro   RegistroPonto @relation(fields: [registroId], references: [id])
 
   @@index([registroId])
 }
 
 model BancoHoras {
-  id             String   @id @default(cuid())
-  usuarioId      String   @unique
-  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
-  saldoMinutos   Int      @default(0)
-  atualizadoEm   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  usuarioId    String   @unique
+  saldoMinutos Int      @default(0)
+  atualizadoEm DateTime @updatedAt
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 model Feriado {
-  id             String      @id @default(cuid())
-  organizacaoId  String
-  organizacao    Organizacao @relation(fields: [organizacaoId], references: [id])
-  data           DateTime    @db.Date
-  nome           String
+  id            String      @id @default(cuid())
+  organizacaoId String
+  data          DateTime    @db.Date
+  nome          String
+  organizacao   Organizacao @relation(fields: [organizacaoId], references: [id])
 
   @@index([organizacaoId, data])
 }
